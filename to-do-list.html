@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>To-Do List</title>
+    <!-- Link to Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="./sidebar.css">
+    <style>
+        body {
+            background: url(./ariel_wu_Seamless_Patterns_planets_watercolor_cute_dreamy_color_9e836f81-97b1-4adf-b8f9-271a0d64b77d.png);
+        }
+
+        .todo-container {
+            background-color: #ffffff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 0.25rem;
+            height: 520px;
+            overflow-y: auto;
+        }
+
+        .list-group-item {
+            border-left: 0;
+            border-right: 0;
+            border-radius: 0;
+        }
+
+        .completed .todo-text {
+            text-decoration: line-through;
+            color: #999999;
+        }
+
+        #add-new-task-btn {
+            padding: 5px 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container-fluid">
+        <!-- 你现有的月历HTML代码 -->
+        <div class="p-2">
+            <h1 class="h1">TODO LIST</h1>
+        </div>
+        <div class="container py-3v">
+            <div class="row justify-content-center">
+                <div class="col-md-8">
+                    <!-- Task Filters -->
+                    <div class="btn-group btn-group-toggle d-flex justify-content-center mb-2" data-toggle="buttons">
+                        <label class="btn btn-success">
+                            <input type="radio" name="filter-option" value="all" autocomplete="off"> 全部
+                        </label>
+                        <label class="btn btn-success">
+                            <input type="radio" name="filter-option" value="active" autocomplete="off"> 進行中
+                        </label>
+                        <label class="btn btn-success">
+                            <input type="radio" name="filter-option" value="completed" autocomplete="off"> 已完成
+                        </label>
+                    </div>
+                    <div class="todo-container">
+                        <ul class="list-group list-group-flush" id="todo-list">
+                        </ul>
+                    </div>
+                    <div class="todo-header d-flex justify-content-between align-items-center p-3">
+                        <input type="text" class="form-control form-control-md" id="new-task"
+                            placeholder="Add a new task">
+                        <button class="btn btn-success btn-md ml-2" id="add-new-task-btn">+</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script>
+        function updateLocalStorage() {
+            var tasks = [];
+            document.querySelectorAll('#todo-list .list-group-item').forEach(function (taskItem) {
+                tasks.push({
+                    text: taskItem.querySelector('.task-text').textContent,
+                    completed: taskItem.querySelector('input[type="checkbox"]').checked
+                });
+            });
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+        }
+
+        document.getElementById('add-new-task-btn').addEventListener('click', function () {
+            var taskContent = document.getElementById('new-task').value.trim();
+            if (taskContent) {
+                var taskItem = document.createElement('li');
+                taskItem.classList.add('list-group-item');
+                taskItem.innerHTML = `
+            <input type="checkbox" class="mr-2">
+            <span class="task-text">${taskContent}</span>
+            <button class="btn btn-sm float-right delete-task-btn">刪除</button>
+        `;
+
+                document.getElementById('todo-list').appendChild(taskItem);
+                document.getElementById('new-task').value = '';
+
+                // 更新篩選，以反映新任務
+                var currentFilter = document.querySelector('input[name="filter-option"]:checked');
+
+                sortTasks();
+                updateLocalStorage();
+                filterTasks(currentFilter);
+
+            } else {
+                alert('請輸入任務內容！');
+            }
+
+
+        });
+
+        document.getElementById('todo-list').addEventListener('change', function (event) {
+            if (event.target.type === 'checkbox') {
+                // 標記任務為完成或未完成
+                var taskText = event.target.nextElementSibling;
+                taskText.style.textDecoration = event.target.checked ? 'line-through' : 'none';
+                var target = event.target;
+
+                // 檢查觸發事件的元素是否為 checkbox
+                if (target.tagName === 'INPUT' && target.type === 'checkbox') {
+                    var taskText = target.nextElementSibling;
+
+                    // 根據 checkbox 的勾選狀態，切換任務文本的樣式
+                    if (target.checked) {
+                        taskText.style.textDecoration = 'line-through';
+                    } else {
+                        taskText.style.textDecoration = 'none';
+                    }
+                }
+
+                sortTasks();
+                updateLocalStorage();
+            };
+        });
+
+        // 篩選任務的函數
+        function filterTasks(filter) {
+            var tasks = document.querySelectorAll('#todo-list .list-group-item');
+            tasks.forEach(function (task) {
+                var isChecked = task.querySelector('input[type="checkbox"]').checked;
+                switch (filter) {
+                    case 'all':
+                        task.style.display = '';
+                        break;
+                    case 'active':
+                        task.style.display = isChecked ? 'none' : '';
+                        break;
+                    case 'completed':
+                        task.style.display = isChecked ? '' : 'none';
+                        break;
+                }
+            });
+        }
+
+        // 監聽篩選按鈕的變化
+        document.querySelectorAll('input[name="filter-option"]').forEach(function (filterInput) {
+            filterInput.addEventListener('change', function () {
+                filterTasks(filterInput.value);
+            });
+        });
+
+        document.getElementById('todo-list').addEventListener('click', function (event) {
+            // 確認點擊的元素是刪除按鈕
+            if (event.target.classList.contains('delete-task-btn')) {
+                // 獲取待刪除的待辦事項元素
+                var taskItem = event.target.parentElement;
+
+                // 從列表中移除該任務
+                taskItem.remove();
+                sortTasks();
+                updateLocalStorage();
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', function () {
+            var storedTasks = localStorage.getItem('tasks');
+            if (storedTasks) {
+                JSON.parse(storedTasks).forEach(function (task) {
+                    var taskItem = document.createElement('li');
+                    taskItem.classList.add('list-group-item');
+                    taskItem.innerHTML = `
+                    <input type="checkbox" class="mr-2" ${task.completed ? 'checked' : ''}>
+                    <span class="task-text" style="${task.completed ? 'text-decoration: line-through;' : ''}">${task.text}</span>
+                    <button class="btn btn-sm float-right delete-task-btn">刪除</button>
+                    `;
+
+                    document.getElementById('todo-list').appendChild(taskItem);
+                });
+                sortTasks();
+
+                var currentFilterInput = document.querySelector('input[name="filter-option"]:checked');
+                var currentFilter = currentFilterInput ? currentFilterInput.value : 'all';
+                filterTasks(currentFilter);
+            }
+
+            // 這裡調用篩選函數以適應初始篩選條件
+            var currentFilter = document.querySelector('input[name="filter-option"]:checked');
+            filterTasks(currentFilter);
+        });
+
+        function sortTasks() {
+            var todoList = document.getElementById('todo-list');
+            var tasks = Array.from(todoList.children);
+
+            // 對任務進行排序：未完成的在前，已完成的在後
+            tasks.sort(function (a, b) {
+                var aChecked = a.querySelector('input[type="checkbox"]').checked;
+                var bChecked = b.querySelector('input[type="checkbox"]').checked;
+                return (aChecked === bChecked) ? 0 : aChecked ? 1 : -1;
+            });
+
+            // 根據排序結果重新添加到列表中
+            tasks.forEach(function (task) {
+                todoList.appendChild(task);
+            });
+        }
+
+
+    </script>
+
+</body>
+
+</html>
