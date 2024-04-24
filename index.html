@@ -41,14 +41,14 @@
 
 <body>
     <div class="container-fluid">
-        <!-- 你现有的月历HTML代码 -->
+
         <div class="p-2">
             <h1 class="h1">TODO LIST</h1>
         </div>
         <div class="container py-3v">
             <div class="row justify-content-center">
                 <div class="col-md-8">
-                    <!-- Task Filters -->
+
                     <div class="btn-group btn-group-toggle d-flex justify-content-center mb-2" data-toggle="buttons">
                         <label class="btn btn-success">
                             <input type="radio" name="filter-option" value="all" autocomplete="off"> 全部
@@ -102,7 +102,7 @@
                 document.getElementById('todo-list').appendChild(taskItem);
                 document.getElementById('new-task').value = '';
 
-                // 更新篩選，以反映新任務
+               
                 var currentFilter = document.querySelector('input[name="filter-option"]:checked');
 
                 sortTasks();
